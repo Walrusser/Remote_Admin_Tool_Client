@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{C069DCD1-C336-4361-AF76-9FFD91CAF954}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>RAT_clientSide</RootNamespace>
-    <AssemblyName>RAT_clientSide</AssemblyName>
+    <RootNamespace>WindowsDesktopSharing</RootNamespace>
+    <AssemblyName>WindowsDesktopSharing</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

